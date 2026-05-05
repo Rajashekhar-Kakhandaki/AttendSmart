@@ -1,0 +1,141 @@
+// BunkSmart Database Schema
+// Run: npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  minThreshold Int      @default(75) @map("min_threshold")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  subjects           Subject[]
+  timetableSlots     TimetableSlot[]
+  academicCalendar   AcademicCalendar[]
+  attendanceRecords  AttendanceRecord[]
+  moodLogs           MoodLog[]
+
+  @@map("users")
+}
+
+model Subject {
+  id             String  @id @default(uuid())
+  userId         String  @map("user_id")
+  name           String
+  minThreshold   Int?    @map("min_threshold") // null = inherit from user
+  isMustAttend   Boolean @default(false) @map("is_must_attend")
+  color          String  @default("#6366f1") // hex color for UI
+  initialTotal   Int     @default(0) @map("initial_total")   // classes held before using app
+  initialAttended Int    @default(0) @map("initial_attended") // classes attended before using app
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timetableSlots    TimetableSlot[]
+  attendanceRecords AttendanceRecord[]
+
+  @@map("subjects")
+}
+
+model TimetableSlot {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  subjectId   String    @map("subject_id")
+  dayOfWeek   DayOfWeek @map("day_of_week")
+  periodNumber Int      @map("period_number")
+  startTime   String    @map("start_time") // "09:00"
+  endTime     String    @map("end_time")   // "10:00"
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject           Subject            @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  attendanceRecords AttendanceRecord[]
+
+  @@unique([userId, dayOfWeek, periodNumber])
+  @@map("timetable_slots")
+}
+
+model AcademicCalendar {
+  id     String       @id @default(uuid())
+  userId String       @map("user_id")
+  date   DateTime     @db.Date
+  type   CalendarType
+  label  String       // "Diwali", "Internal Exam 1", etc.
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date, type])
+  @@map("academic_calendar")
+}
+
+model AttendanceRecord {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  subjectId String           @map("subject_id")
+  slotId    String           @map("slot_id")
+  date      DateTime         @db.Date
+  status    AttendanceStatus @default(PRESENT)
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  slot    TimetableSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, slotId, date])
+  @@map("attendance_records")
+}
+
+model MoodLog {
+  id     String   @id @default(uuid())
+  userId String   @map("user_id")
+  date   DateTime @db.Date
+  mood   Mood
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("mood_logs")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum DayOfWeek {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+}
+
+enum CalendarType {
+  HOLIDAY
+  EXAM
+  SEMESTER_START
+  SEMESTER_END
+  ASSIGNMENT
+  EVENT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum Mood {
+  HAPPY
+  CHILL
+  TIRED
+  STRESSED
+}

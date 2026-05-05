@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Environment variables — NEVER commit these
+.env
+server/.env
+client/.env
+
+# Build outputs
+client/dist/
+server/dist/
+
+# Prisma
+server/prisma/*.db
+server/prisma/*.db-journal
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

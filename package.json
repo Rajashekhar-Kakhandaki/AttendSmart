@@ -1,0 +1,18 @@
+{
+  "name": "bunksmart",
+  "version": "1.0.0",
+  "description": "BunkSmart – AI-powered attendance planner for college students",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\" --names \"SERVER,CLIENT\" --prefix-colors \"cyan,magenta\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "db:migrate": "cd server && npx prisma migrate dev",
+    "db:generate": "cd server && npx prisma generate",
+    "db:studio": "cd server && npx prisma studio"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
