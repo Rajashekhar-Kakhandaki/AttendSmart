@@ -1,6 +1,25 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from './client';
 
+// ─── Profile ──────────────────────────────────────────────────────────────────
+export const useUpdateProfile = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data) => api.put('/auth/me', data).then((r) => r.data.user),
+    onSuccess: (user) => {
+      // Update the auth store with new user data directly
+      qc.invalidateQueries({ queryKey: ['me'] });
+      // Patch the Zustand store via a custom event so Layout updates instantly
+      window.dispatchEvent(new CustomEvent('profile-updated', { detail: user }));
+    },
+  });
+};
+
+export const useChangePassword = () =>
+  useMutation({
+    mutationFn: (data) => api.put('/auth/me/password', data).then((r) => r.data),
+  });
+
 // ─── Subjects ─────────────────────────────────────────────────────────────────
 export const useSubjects = () =>
   useQuery({ queryKey: ['subjects'], queryFn: () => api.get('/subjects').then((r) => r.data.subjects) });
@@ -17,7 +36,14 @@ export const useDeleteSubject = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id) => api.delete(`/subjects/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['subjects'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['subjects'] });
+      qc.invalidateQueries({ queryKey: ['timetable'] });
+      qc.invalidateQueries({ queryKey: ['today-slots'] });
+      qc.invalidateQueries({ queryKey: ['stats'] });
+      qc.invalidateQueries({ queryKey: ['history'] });
+      qc.invalidateQueries({ queryKey: ['safe-bunks'] });
+    },
   });
 };
 
@@ -56,6 +82,8 @@ export const useDeleteSlot = () => {
   });
 };
 
+
+
 export const useUpdateSlot = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -83,6 +111,8 @@ export const useDeleteCalendarEntry = () => {
   });
 };
 
+
+
 export const useUpdateCalendarEntry = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -107,9 +137,11 @@ export const useUpdateAttendance = () => {
       qc.invalidateQueries({ queryKey: ['attendance-today'] });
       qc.invalidateQueries({ queryKey: ['stats'] });
       qc.invalidateQueries({ queryKey: ['history'] });
+      qc.invalidateQueries({ queryKey: ['streak'] });
     },
   });
 };
+
 
 export const useAttendanceStats = () =>
   useQuery({ queryKey: ['stats'], queryFn: () => api.get('/attendance/stats').then((r) => r.data.stats) });
@@ -120,9 +152,25 @@ export const useAttendanceHistory = (filters = {}) =>
     queryFn: () => api.get('/attendance/history', { params: filters }).then((r) => r.data.records),
   });
 
+export const useStreak = () =>
+  useQuery({
+    queryKey: ['streak'],
+    queryFn: () => api.get('/attendance/streak').then((r) => r.data),
+    staleTime: 60_000,
+  });
+
+
 // ─── Bunk Planner ─────────────────────────────────────────────────────────────
 export const useSafeBunks = () =>
   useQuery({ queryKey: ['safe-bunks'], queryFn: () => api.get('/bunk/safe').then((r) => r.data.stats) });
+
+export const useForecast = () =>
+  useQuery({
+    queryKey: ['forecast'],
+    queryFn: () => api.get('/bunk/forecast').then((r) => r.data),
+    staleTime: 5 * 60_000, // 5 min — changes slowly
+  });
+
 
 export const useAISuggestion = () =>
   useMutation({ mutationFn: () => api.post('/bunk/ai-suggest').then((r) => r.data) });
@@ -140,3 +188,21 @@ export const useChat = () =>
     mutationFn: ({ message, conversationHistory }) =>
       api.post('/bunk/chat', { message, conversationHistory }).then((r) => r.data.reply),
   });
+
+export const useMoodHistory = (days = 30) =>
+  useQuery({
+    queryKey: ['mood-history', days],
+    queryFn: () => api.get('/bunk/mood-history', { params: { days } }).then((r) => r.data.logs),
+    staleTime: 60_000,
+  });
+
+// ─── AI Extraction ────────────────────────────────────────────────────────────
+export const useExtractFromImage = () => {
+  return useMutation({
+    mutationFn: (formData) => api.post('/ai/extract', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }).then((r) => r.data.data),
+  });
+};

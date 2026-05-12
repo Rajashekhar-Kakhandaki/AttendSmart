@@ -8,6 +8,7 @@ const timetableRoutes  = require('./routes/timetable');
 const attendanceRoutes = require('./routes/attendance');
 const bunkRoutes       = require('./routes/bunk');
 const exportRoutes     = require('./routes/export');
+const aiRoutes         = require('./routes/ai');
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use('/api/timetable',  timetableRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/bunk',       bunkRoutes);
 app.use('/api/export',     exportRoutes);
+app.use('/api/ai',         aiRoutes);
 
 // ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {

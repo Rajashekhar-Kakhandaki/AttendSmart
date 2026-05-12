@@ -61,9 +61,17 @@ router.delete('/:id', async (req, res, next) => {
     });
     if (!subject) return res.status(404).json({ error: 'Subject not found' });
 
+    // Manually delete dependent records to avoid database-level foreign key constraint errors
+    await prisma.attendanceRecord.deleteMany({ where: { subjectId: req.params.id } });
+    await prisma.timetableSlot.deleteMany({ where: { subjectId: req.params.id } });
+    
+    // Now delete the subject
     await prisma.subject.delete({ where: { id: req.params.id } });
     res.json({ message: 'Subject deleted' });
-  } catch (err) { next(err); }
+  } catch (err) { 
+    console.error("Subject Delete Error:", err);
+    next(err); 
+  }
 });
 
 module.exports = router;

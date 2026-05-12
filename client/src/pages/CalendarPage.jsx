@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Trash2, X, CalendarDays } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, X, CalendarDays, Sparkles } from 'lucide-react';
 import { useCalendar, useAddCalendarEntry, useDeleteCalendarEntry } from '../api/hooks';
 import { PageLoader } from '../components/UI';
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const EVENT_TYPES = [
-  { value: 'HOLIDAY',        label: 'Holiday',        color: '#f59e0b', bg: 'bg-amber-500/15',   border: 'border-amber-500/30',   text: 'text-amber-400',  dot: '#f59e0b' },
-  { value: 'EXAM',           label: 'Exam',           color: '#ef4444', bg: 'bg-red-500/15',     border: 'border-red-500/30',     text: 'text-red-400',    dot: '#ef4444' },
-  { value: 'SEMESTER_START', label: 'Semester Start', color: '#22c55e', bg: 'bg-green-500/15',   border: 'border-green-500/30',   text: 'text-green-400',  dot: '#22c55e' },
-  { value: 'SEMESTER_END',   label: 'Semester End',   color: '#8b5cf6', bg: 'bg-purple-500/15',  border: 'border-purple-500/30',  text: 'text-purple-400', dot: '#8b5cf6' },
-  { value: 'ASSIGNMENT',     label: 'Assignment Due',  color: '#3b82f6', bg: 'bg-blue-500/15',   border: 'border-blue-500/30',   text: 'text-blue-400',   dot: '#3b82f6' },
-  { value: 'EVENT',          label: 'College Event',  color: '#ec4899', bg: 'bg-pink-500/15',    border: 'border-pink-500/30',    text: 'text-pink-400',   dot: '#ec4899' },
+  { value: 'HOLIDAY',        label: 'Holiday',        emoji: '🎉', color: '#f59e0b', bg: 'rgba(245,158,11,0.10)', border: 'rgba(245,158,11,0.25)', text: '#f59e0b' },
+  { value: 'EXAM',           label: 'Exam',           emoji: '📝', color: '#ef4444', bg: 'rgba(239,68,68,0.10)',  border: 'rgba(239,68,68,0.25)',  text: '#ef4444' },
+  { value: 'SEMESTER_START', label: 'Sem Start',      emoji: '🚀', color: '#22c55e', bg: 'rgba(34,197,94,0.10)', border: 'rgba(34,197,94,0.25)',  text: '#22c55e' },
+  { value: 'SEMESTER_END',   label: 'Sem End',        emoji: '🏁', color: '#8b5cf6', bg: 'rgba(139,92,246,0.10)',border: 'rgba(139,92,246,0.25)', text: '#8b5cf6' },
+  { value: 'ASSIGNMENT',     label: 'Assignment',     emoji: '📋', color: '#3b82f6', bg: 'rgba(59,130,246,0.10)',border: 'rgba(59,130,246,0.25)', text: '#3b82f6' },
+  { value: 'EVENT',          label: 'College Event',  emoji: '🎊', color: '#ec4899', bg: 'rgba(236,72,153,0.10)',border: 'rgba(236,72,153,0.25)', text: '#ec4899' },
 ];
 
 function getTypeConfig(type) {
@@ -20,13 +20,9 @@ function getTypeConfig(type) {
 const DAYS   = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function toLocalDateStr(date) {
   const d = new Date(date);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
 function isSameDay(a, b) {
@@ -38,6 +34,7 @@ function AddEventModal({ selectedDate, onClose, onSave, isLoading }) {
   const [type, setType]   = useState('HOLIDAY');
   const [label, setLabel] = useState('');
   const [date, setDate]   = useState(selectedDate || toLocalDateStr(new Date()));
+  const cfg = getTypeConfig(type);
 
   const handle = (e) => {
     e.preventDefault();
@@ -46,12 +43,29 @@ function AddEventModal({ selectedDate, onClose, onSave, isLoading }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-surface-card border border-surface-border rounded-2xl w-full max-w-sm shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-surface-border">
-          <p className="text-sm font-semibold text-white">Add Calendar Event</p>
-          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
-            <X size={16} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(12px)' }}>
+      <div className="w-full max-w-sm animate-[scaleIn_0.2s_ease-out]"
+        style={{
+          background: 'rgba(17,17,21,0.97)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '20px',
+          boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
+        }}>
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-xl flex items-center justify-center"
+              style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
+              <span className="text-sm">{cfg.emoji}</span>
+            </div>
+            <p className="text-sm font-semibold text-white">Add Calendar Event</p>
+          </div>
+          <button onClick={onClose}
+            className="w-7 h-7 rounded-xl flex items-center justify-center text-gray-500 hover:text-white hover:bg-white/10 transition-all">
+            <X size={14} />
           </button>
         </div>
 
@@ -59,31 +73,24 @@ function AddEventModal({ selectedDate, onClose, onSave, isLoading }) {
           {/* Date */}
           <div>
             <label className="label">Date</label>
-            <input
-              type="date"
-              className="input"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-            />
+            <input type="date" className="input" value={date}
+              onChange={(e) => setDate(e.target.value)} required />
           </div>
 
           {/* Type */}
           <div>
             <label className="label">Event Type</label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5">
               {EVENT_TYPES.map((t) => (
-                <button
-                  key={t.value}
-                  type="button"
-                  onClick={() => setType(t.value)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
-                    type === t.value
-                      ? `${t.bg} ${t.border} ${t.text}`
-                      : 'border-surface-border text-gray-500 hover:text-white hover:border-white/20'
-                  }`}
-                >
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: t.dot }} />
+                <button key={t.value} type="button" onClick={() => setType(t.value)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-medium transition-all"
+                  style={{
+                    background: type === t.value ? t.bg : 'rgba(255,255,255,0.02)',
+                    borderColor: type === t.value ? t.border : 'rgba(255,255,255,0.07)',
+                    color: type === t.value ? t.text : '#6b7280',
+                    boxShadow: type === t.value ? `0 0 12px ${t.color}20` : 'none',
+                  }}>
+                  <span>{t.emoji}</span>
                   {t.label}
                 </button>
               ))}
@@ -93,29 +100,25 @@ function AddEventModal({ selectedDate, onClose, onSave, isLoading }) {
           {/* Label */}
           <div>
             <label className="label">Label / Description</label>
-            <input
-              type="text"
-              className="input"
+            <input type="text" className="input"
               placeholder={
-                type === 'HOLIDAY'        ? 'e.g. Diwali, Republic Day' :
-                type === 'EXAM'           ? 'e.g. Internal Exam 1, End Sem' :
-                type === 'SEMESTER_START' ? 'e.g. Semester 4 Start' :
-                type === 'SEMESTER_END'   ? 'e.g. Semester 4 End' :
-                type === 'ASSIGNMENT'     ? 'e.g. DSA Assignment 2' :
-                                            'e.g. Annual Day, Sports Meet'
+                type === 'HOLIDAY' ? 'e.g. Diwali, Republic Day' :
+                type === 'EXAM'    ? 'e.g. Internal Exam 1, End Sem' :
+                type === 'ASSIGNMENT' ? 'e.g. DSA Assignment 2' :
+                                    'e.g. Annual Day, Sports Meet'
               }
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              required
-            />
+              value={label} onChange={(e) => setLabel(e.target.value)} required />
           </div>
 
           <div className="flex gap-2 pt-1">
-            <button type="button" onClick={onClose} className="btn-ghost flex-1 text-sm py-2">
-              Cancel
-            </button>
-            <button type="submit" disabled={isLoading || !label.trim()} className="btn-primary flex-1 text-sm py-2">
-              {isLoading ? 'Saving…' : 'Add Event'}
+            <button type="button" onClick={onClose} className="btn-ghost flex-1 text-sm py-2.5">Cancel</button>
+            <button type="submit" disabled={isLoading || !label.trim()} className="btn-primary flex-1 text-sm py-2.5">
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Saving…
+                </span>
+              ) : 'Add Event'}
             </button>
           </div>
         </form>
@@ -128,7 +131,7 @@ function AddEventModal({ selectedDate, onClose, onSave, isLoading }) {
 export default function CalendarPage() {
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-  const [showModal, setShowModal]     = useState(false);
+  const [showModal, setShowModal]       = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
 
   const { data: entries = [], isLoading } = useCalendar();
@@ -138,14 +141,12 @@ export default function CalendarPage() {
   const year  = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  // Build calendar grid
-  const firstDay    = new Date(year, month, 1).getDay();   // 0=Sun
+  const firstDay    = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const cells = [];
   for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
 
-  // Map entries for quick lookup: "YYYY-MM-DD" → [entry, ...]
   const entryMap = {};
   (entries || []).forEach((e) => {
     const key = toLocalDateStr(e.date);
@@ -162,28 +163,29 @@ export default function CalendarPage() {
   };
 
   const handleSave = ({ date, type, label }) => {
-    addEntry.mutate({ date, type, label }, {
-      onSuccess: () => setShowModal(false),
-    });
+    addEntry.mutate({ date, type, label }, { onSuccess: () => setShowModal(false) });
   };
 
   const handleDelete = (id) => {
     if (confirm('Remove this event?')) deleteEntry.mutate(id);
   };
 
-  // Upcoming events (next 60 days)
+  const todayStr = toLocalDateStr(new Date());
   const upcoming = (entries || [])
-    .filter((e) => new Date(e.date) >= new Date(today.setHours(0,0,0,0)))
-    .slice(0, 8);
+    .filter((e) => toLocalDateStr(e.date) >= todayStr)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(0, 10);
 
   if (isLoading) return <PageLoader message="Loading calendar…" />;
 
   return (
-    <div className="p-6 max-w-4xl">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 md:p-6 animate-[fadeIn_0.3s_ease-out]">
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-xl font-semibold text-white">Academic Calendar</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Holidays, exams, semester dates & events</p>
+          <h1 className="text-2xl font-display font-bold text-white">Academic Calendar</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Holidays, exams, semester dates &amp; events</p>
         </div>
         <button
           onClick={() => { setSelectedDate(toLocalDateStr(new Date())); setShowModal(true); }}
@@ -196,118 +198,162 @@ export default function CalendarPage() {
       {/* Legend */}
       <div className="flex flex-wrap gap-2 mb-5">
         {EVENT_TYPES.map((t) => (
-          <span key={t.value} className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${t.bg} ${t.border} ${t.text}`}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: t.dot }} />
+          <span key={t.value}
+            className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium"
+            style={{ background: t.bg, border: `1px solid ${t.border}`, color: t.text }}>
+            <span>{t.emoji}</span>
             {t.label}
           </span>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+
         {/* ── Month Grid ── */}
-        <div className="lg:col-span-2 card p-4">
+        <div className="xl:col-span-2 card">
           {/* Month nav */}
-          <div className="flex items-center justify-between mb-4">
-            <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors">
+          <div className="flex items-center justify-between mb-5">
+            <button onClick={prevMonth}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/8 transition-all">
               <ChevronLeft size={16} />
             </button>
-            <p className="text-sm font-semibold text-white">
-              {MONTHS[month]} {year}
+            <p className="font-display font-semibold text-white text-base">
+              {MONTHS[month]} <span className="text-gray-500">{year}</span>
             </p>
-            <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors">
+            <button onClick={nextMonth}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/8 transition-all">
               <ChevronRight size={16} />
             </button>
           </div>
 
           {/* Day headers */}
-          <div className="grid grid-cols-7 mb-1">
+          <div className="grid grid-cols-7 mb-2">
             {DAYS.map((d) => (
-              <div key={d} className="text-center text-xs text-gray-600 font-medium py-1">{d}</div>
+              <div key={d} className={`text-center text-[11px] font-semibold py-1 uppercase tracking-widest ${
+                d === 'Sun' ? 'text-red-400/60' : 'text-gray-600'
+              }`}>{d}</div>
             ))}
           </div>
 
           {/* Date cells */}
-          <div className="grid grid-cols-7 gap-0.5">
+          <div className="grid grid-cols-7 gap-1">
             {cells.map((date, idx) => {
               if (!date) return <div key={`empty-${idx}`} />;
 
               const key        = toLocalDateStr(date);
               const dayEntries = entryMap[key] || [];
               const isToday    = isSameDay(date, new Date());
+              const isSun      = date.getDay() === 0;
+              const hasEntries = dayEntries.length > 0;
 
               return (
                 <button
                   key={key}
                   onClick={() => handleDayClick(date)}
-                  title={dayEntries.map((e) => e.label).join(', ')}
-                  className={`relative flex flex-col items-center p-1 rounded-lg min-h-[52px] transition-colors group
-                    ${isToday ? 'bg-brand-500/20 ring-1 ring-brand-500/50' : 'hover:bg-white/5'}
-                    ${dayEntries.length > 0 ? 'ring-1 ring-inset ring-white/10' : ''}
-                  `}
+                  className="relative flex flex-col items-stretch p-2 rounded-2xl min-h-[120px] transition-all duration-200 group overflow-hidden"
+                  style={{
+                    background: isToday ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.015)',
+                    border: isToday ? '1px solid rgba(99,102,241,0.4)' : '1px solid rgba(255,255,255,0.05)',
+                  }}
                 >
-                  <span className={`text-xs mb-1 ${isToday ? 'text-brand-400 font-bold' : 'text-gray-400'}`}>
-                    {date.getDate()}
-                  </span>
-                  {/* Event dots */}
-                  <div className="flex flex-wrap gap-0.5 justify-center">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-[13px] font-bold w-7 h-7 flex items-center justify-center rounded-full ${
+                      isToday ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/30' : 
+                      isSun ? 'text-red-400' : 'text-gray-300'
+                    }`}>
+                      {date.getDate()}
+                    </span>
+                    {hasEntries && dayEntries.length > 3 && (
+                      <span className="text-[10px] font-bold text-gray-500 px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10">
+                        +{dayEntries.length - 3}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 overflow-hidden">
                     {dayEntries.slice(0, 3).map((e) => {
                       const cfg = getTypeConfig(e.type);
                       return (
-                        <span
-                          key={e.id}
-                          className="w-1.5 h-1.5 rounded-full"
-                          style={{ backgroundColor: cfg.dot }}
-                        />
+                        <div key={e.id} className="text-[10px] font-semibold px-2 py-1 rounded-lg truncate text-left transition-transform group-hover:scale-[1.02]"
+                          style={{ background: cfg.bg, color: cfg.text, border: `1px solid ${cfg.border}` }}>
+                          <span className="mr-1">{cfg.emoji}</span>
+                          {e.label}
+                        </div>
                       );
                     })}
                   </div>
-                  {/* Label on hover */}
-                  {dayEntries.length > 0 && (
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-10 w-max max-w-[140px]">
-                      <div className="bg-gray-900 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white shadow-xl">
-                        {dayEntries.map((e) => {
-                          const cfg = getTypeConfig(e.type);
-                          return (
-                            <div key={e.id} className={`${cfg.text}`}>{e.label}</div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
                 </button>
               );
             })}
           </div>
+
+          {/* Month summary pill */}
+          {Object.keys(entryMap).filter((k) => {
+            const d = new Date(k);
+            return d.getMonth() === month && d.getFullYear() === year;
+          }).length > 0 && (
+            <div className="mt-4 pt-4 flex items-center gap-2 flex-wrap"
+              style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <span className="text-[11px] text-gray-600 uppercase tracking-widest font-medium">This month:</span>
+              {EVENT_TYPES.map((t) => {
+                const count = Object.entries(entryMap)
+                  .filter(([k]) => {
+                    const d = new Date(k);
+                    return d.getMonth() === month && d.getFullYear() === year;
+                  })
+                  .flatMap(([, evs]) => evs)
+                  .filter((ev) => ev.type === t.value).length;
+                if (!count) return null;
+                return (
+                  <span key={t.value} className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium"
+                    style={{ background: t.bg, border: `1px solid ${t.border}`, color: t.text }}>
+                    {t.emoji} {count} {t.label}
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* ── Right Panel: Upcoming & All Events ── */}
+        {/* ── Right Panel ── */}
         <div className="space-y-4">
+
           {/* Upcoming */}
-          <div className="card p-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2">
-              <CalendarDays size={13} /> Upcoming Events
+          <div className="card">
+            <p className="text-xs text-gray-500 uppercase tracking-widest font-medium mb-3 flex items-center gap-2">
+              <CalendarDays size={13} className="text-brand-400" /> Upcoming Events
             </p>
             {upcoming.length === 0 ? (
-              <p className="text-xs text-gray-600 text-center py-4">No upcoming events</p>
+              <div className="text-center py-6">
+                <p className="text-3xl mb-2">📅</p>
+                <p className="text-xs text-gray-600">No upcoming events</p>
+              </div>
             ) : (
               <div className="space-y-2">
                 {upcoming.map((e) => {
                   const cfg = getTypeConfig(e.type);
                   const d   = new Date(e.date);
+                  const daysAway = Math.ceil((d - new Date(todayStr)) / 86400000);
                   return (
-                    <div key={e.id} className={`flex items-start gap-2 px-3 py-2 rounded-xl border ${cfg.bg} ${cfg.border}`}>
-                      <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: cfg.dot }} />
+                    <div key={e.id}
+                      className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl transition-all hover:scale-[1.01]"
+                      style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
+                      <span className="text-base mt-0.5 shrink-0">{cfg.emoji}</span>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-xs font-medium truncate ${cfg.text}`}>{e.label}</p>
-                        <p className="text-xs text-gray-500">
-                          {d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </p>
+                        <p className="text-xs font-semibold truncate" style={{ color: cfg.text }}>{e.label}</p>
+                        <div className="flex items-center justify-between mt-0.5">
+                          <p className="text-[10px] text-gray-500">
+                            {d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                          </p>
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                            style={{ background: cfg.border, color: cfg.text }}>
+                            {daysAway === 0 ? 'Today' : daysAway === 1 ? 'Tomorrow' : `in ${daysAway}d`}
+                          </span>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => handleDelete(e.id)}
-                        className="text-gray-600 hover:text-red-400 transition-colors shrink-0"
-                      >
-                        <Trash2 size={12} />
+                      <button onClick={() => handleDelete(e.id)}
+                        className="text-gray-700 hover:text-red-400 transition-colors shrink-0 mt-0.5">
+                        <Trash2 size={11} />
                       </button>
                     </div>
                   );
@@ -316,38 +362,49 @@ export default function CalendarPage() {
             )}
           </div>
 
-          {/* All events list */}
-          <div className="card p-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wide mb-3">All Events ({entries.length})</p>
+          {/* All events */}
+          <div className="card">
+            <p className="text-xs text-gray-500 uppercase tracking-widest font-medium mb-3">
+              All Events <span className="text-brand-400 font-bold ml-1">({entries.length})</span>
+            </p>
             {entries.length === 0 ? (
-              <p className="text-xs text-gray-600 text-center py-4">No events added yet.<br/>Click a date or "+ Add Event" to begin.</p>
+              <div className="text-center py-5">
+                <p className="text-2xl mb-1.5">✨</p>
+                <p className="text-xs text-gray-600">Click a date or "+ Add Event" to begin</p>
+              </div>
             ) : (
-              <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+              <div className="space-y-1.5 max-h-80 overflow-y-auto pr-1">
                 {[...entries].reverse().map((e) => {
                   const cfg = getTypeConfig(e.type);
                   const d   = new Date(e.date);
                   return (
-                    <div key={e.id} className="flex items-center gap-2 py-1.5 border-b border-surface-border last:border-0">
-                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: cfg.dot }} />
+                    <div key={e.id}
+                      className="flex items-center gap-2.5 py-2 px-2 rounded-xl transition-all hover:bg-white/3 group">
+                      <span className="text-sm shrink-0">{cfg.emoji}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-white truncate">{e.label}</p>
-                        <p className="text-xs text-gray-500">
-                          {d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                          {' · '}
-                          <span className={cfg.text}>{cfg.label}</span>
+                        <p className="text-xs text-white truncate font-medium">{e.label}</p>
+                        <p className="text-[10px] text-gray-600">
+                          {d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </p>
                       </div>
-                      <button
-                        onClick={() => handleDelete(e.id)}
-                        className="text-gray-600 hover:text-red-400 transition-colors"
-                      >
-                        <Trash2 size={12} />
+                      <button onClick={() => handleDelete(e.id)}
+                        className="text-gray-700 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 shrink-0">
+                        <Trash2 size={11} />
                       </button>
                     </div>
                   );
                 })}
               </div>
             )}
+          </div>
+
+          {/* Quick add hint */}
+          <div className="card p-3 text-center"
+            style={{ borderColor: 'rgba(99,102,241,0.15)', background: 'rgba(99,102,241,0.04)' }}>
+            <Sparkles size={14} className="text-brand-400 mx-auto mb-1.5" />
+            <p className="text-xs text-gray-600 leading-relaxed">
+              Tap any date on the calendar to quickly add an event for that day
+            </p>
           </div>
         </div>
       </div>

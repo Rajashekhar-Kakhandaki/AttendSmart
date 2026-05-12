@@ -59,7 +59,7 @@ const me = async (req, res) => {
   res.json({ user: req.user });
 };
 
-// PUT /api/auth/me  (update threshold)
+// PUT /api/auth/me  (update name / threshold)
 const updateMe = async (req, res, next) => {
   try {
     const { name, minThreshold } = req.body;
@@ -74,4 +74,31 @@ const updateMe = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, me, updateMe };
+// PUT /api/auth/me/password
+const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword || newPassword.length < 8) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters' });
+    }
+
+    // Fetch full user (with hash) from DB
+    const dbUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+    const valid  = await bcrypt.compare(currentPassword, dbUser.passwordHash);
+    if (!valid) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data:  { passwordHash: newHash },
+    });
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { register, login, me, updateMe, changePassword };

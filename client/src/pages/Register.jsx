@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, User, Eye, EyeOff, Sparkles, Shield } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 
 export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', password: '', minThreshold: 75 });
-  const [err, setErr] = useState('');
+  const [err, setErr]   = useState('');
+  const [showPw, setShowPw] = useState(false);
   const { register, isLoading } = useAuthStore();
   const navigate = useNavigate();
 
@@ -17,48 +19,100 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface px-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden"
+      style={{ background: 'radial-gradient(ellipse 120% 80% at 50% -10%, rgba(99,102,241,0.18), rgba(9,9,11,1) 65%)' }}>
+
+      {/* Floating orbs */}
+      <div className="absolute top-1/4 right-1/4 w-72 h-72 rounded-full opacity-20 blur-3xl pointer-events-none"
+        style={{ background: 'radial-gradient(circle, #6366f1, transparent)' }} />
+      <div className="absolute bottom-1/4 left-1/4 w-56 h-56 rounded-full opacity-15 blur-3xl pointer-events-none"
+        style={{ background: 'radial-gradient(circle, #8b5cf6, transparent)' }} />
+
+      <div className="w-full max-w-sm relative z-10 animate-[fadeIn_0.4s_ease-out]">
+
+        {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-white">
-            Bunk<span className="text-brand-500">Smart</span>
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4"
+            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 8px 32px rgba(99,102,241,0.4)' }}>
+            <Sparkles size={24} className="text-white" />
+          </div>
+          <h1 className="text-3xl font-display font-bold text-white">
+            Attend<span className="text-gradient-brand">Smart</span>
           </h1>
-          <p className="text-sm text-gray-400 mt-1">Create your account</p>
+          <p className="text-sm text-gray-500 mt-1.5">Create your free account</p>
         </div>
 
-        <form onSubmit={handle} className="card space-y-4">
-          {err && <div className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">{err}</div>}
+        {/* Card */}
+        <div className="card-glass p-6">
+          {err && (
+            <div className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3 mb-4 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+              {err}
+            </div>
+          )}
 
-          <div>
-            <label className="label">Name</label>
-            <input className="input" placeholder="Your name" required
-              value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          </div>
-          <div>
-            <label className="label">College email</label>
-            <input className="input" type="email" placeholder="you@college.edu" required
-              value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-          </div>
-          <div>
-            <label className="label">Password</label>
-            <input className="input" type="password" placeholder="Minimum 8 characters" required minLength={8}
-              value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-          </div>
-          <div>
-            <label className="label">Minimum attendance threshold (%)</label>
-            <input className="input" type="number" min="1" max="100"
-              value={form.minThreshold} onChange={(e) => setForm({ ...form, minThreshold: e.target.value })} />
-            <p className="text-xs text-gray-500 mt-1">Most colleges require 75%. Change if yours differs.</p>
-          </div>
+          <form onSubmit={handle} className="space-y-4">
+            <div>
+              <label className="label">Full Name</label>
+              <div className="relative">
+                <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                <input id="reg-name" className="input pl-9" placeholder="Your name" required
+                  value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              </div>
+            </div>
 
-          <button type="submit" disabled={isLoading} className="btn-primary w-full py-2.5 disabled:opacity-60">
-            {isLoading ? 'Creating account...' : 'Create account'}
-          </button>
-        </form>
+            <div>
+              <label className="label">College Email</label>
+              <div className="relative">
+                <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                <input id="reg-email" className="input pl-9" type="email" placeholder="you@college.edu" required
+                  value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              </div>
+            </div>
 
-        <p className="text-center text-sm text-gray-500 mt-4">
+            <div>
+              <label className="label">Password</label>
+              <div className="relative">
+                <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                <input id="reg-password" className="input pl-9 pr-10" type={showPw ? 'text' : 'password'}
+                  placeholder="Min 8 characters" required minLength={8}
+                  value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                <button type="button" onClick={() => setShowPw(!showPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors">
+                  {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="label">Attendance Threshold</label>
+              <div className="relative">
+                <Shield size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+                <input id="reg-threshold" className="input pl-9" type="number" min="1" max="100"
+                  value={form.minThreshold} onChange={(e) => setForm({ ...form, minThreshold: e.target.value })} />
+              </div>
+              <p className="text-xs text-gray-600 mt-1.5 flex items-center gap-1">
+                <span className="w-1 h-1 rounded-full bg-brand-500 inline-block" />
+                Most colleges require 75%. Change if yours differs.
+              </p>
+            </div>
+
+            <button type="submit" id="reg-submit" disabled={isLoading} className="btn-primary w-full py-3 mt-2 text-sm">
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Creating account...
+                </span>
+              ) : 'Create account'}
+            </button>
+          </form>
+        </div>
+
+        <p className="text-center text-sm text-gray-600 mt-5">
           Already have an account?{' '}
-          <Link to="/login" className="text-brand-500 hover:text-brand-600">Sign in</Link>
+          <Link to="/login" className="text-brand-400 hover:text-brand-300 font-medium transition-colors">
+            Sign in
+          </Link>
         </p>
       </div>
     </div>

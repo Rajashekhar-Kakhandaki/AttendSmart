@@ -11,6 +11,7 @@ import Setup        from './pages/Setup';
 import History      from './pages/History';
 import Analytics    from './pages/Analytics';
 import CalendarPage from './pages/CalendarPage';
+import Profile      from './pages/Profile';
 import Layout       from './components/Layout';
 
 const ProtectedRoute = ({ children }) => {
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="analytics"  element={<Analytics />} />
           <Route path="calendar"   element={<CalendarPage />} />
           <Route path="setup"      element={<Setup />} />
+          <Route path="profile"    element={<Profile />} />
         </Route>
       </Routes>
     </BrowserRouter>

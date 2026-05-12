@@ -109,6 +109,8 @@ router.post('/slots', validate(slotSchema), async (req, res, next) => {
   }
 });
 
+
+
 // DELETE /api/timetable/slots/:id
 router.delete('/slots/:id', async (req, res, next) => {
   try {
@@ -173,6 +175,8 @@ router.put('/slots/:id', validate(slotSchema), async (req, res, next) => {
     next(err);
   }
 });
+
+
 
 // DELETE /api/timetable/calendar/:id
 router.delete('/calendar/:id', async (req, res, next) => {

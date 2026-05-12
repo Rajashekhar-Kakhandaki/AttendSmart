@@ -1,7 +1,7 @@
 {
-  "name": "bunksmart",
+  "name": "attendsmart",
   "version": "1.0.0",
-  "description": "BunkSmart – AI-powered attendance planner for college students",
+  "description": "AttendSmart – AI-powered attendance planner for college students",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\" --names \"SERVER,CLIENT\" --prefix-colors \"cyan,magenta\"",

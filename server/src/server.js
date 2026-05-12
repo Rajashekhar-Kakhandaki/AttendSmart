@@ -10,7 +10,7 @@ async function main() {
     console.log('✅ Database connected');
 
     app.listen(PORT, () => {
-      console.log(`🚀 BunkSmart server running on http://localhost:${PORT}`);
+      console.log(`🚀 AttendSmart server running on http://localhost:${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (err) {

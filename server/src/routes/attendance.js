@@ -181,4 +181,53 @@ router.get('/history', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /api/attendance/streak — consecutive days of full attendance
+router.get('/streak', async (req, res, next) => {
+  try {
+    // Get all records grouped by date, newest first
+    const records = await prisma.attendanceRecord.findMany({
+      where: { userId: req.user.id },
+      orderBy: { date: 'desc' },
+      select: { date: true, status: true },
+    });
+
+    if (!records.length) return res.json({ streak: 0, bestStreak: 0 });
+
+    // Group by date string
+    const byDate = {};
+    for (const r of records) {
+      const key = new Date(r.date).toDateString();
+      if (!byDate[key]) byDate[key] = [];
+      byDate[key].push(r.status);
+    }
+
+    // Walk days in reverse chronological order
+    const sortedDays = Object.keys(byDate).sort(
+      (a, b) => new Date(b) - new Date(a)
+    );
+
+    // A day "counts" if every class that day was PRESENT or LATE
+    const isGoodDay = (statuses) =>
+      statuses.length > 0 && statuses.every((s) => s === 'PRESENT' || s === 'LATE');
+
+    let streak = 0;
+    let bestStreak = 0;
+    let current = 0;
+
+    for (const day of sortedDays) {
+      if (isGoodDay(byDate[day])) {
+        current++;
+        if (current > bestStreak) bestStreak = current;
+      } else {
+        if (streak === 0) streak = current; // freeze current as active streak once we hit a break
+        current = 0;
+      }
+    }
+    if (streak === 0) streak = current; // all days were good
+
+    res.json({ streak, bestStreak });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;
+

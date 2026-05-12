@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '../api/client';
+import { queryClient } from '../main';
 
 const useAuthStore = create((set) => ({
   user: null,
@@ -46,9 +47,14 @@ const useAuthStore = create((set) => ({
   },
 
   logout: () => {
+    // Cancel all in-flight queries and wipe cached data instantly
+    queryClient.cancelQueries();
+    queryClient.clear();
     localStorage.removeItem('bs_token');
     set({ user: null, token: null });
   },
+
+  updateUser: (updatedUser) => set({ user: updatedUser }),
 }));
 
 export default useAuthStore;

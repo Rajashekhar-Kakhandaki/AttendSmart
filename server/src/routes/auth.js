@@ -2,7 +2,7 @@ const { Router } = require('express');
 const { z } = require('zod');
 const validate = require('../middleware/validate');
 const authMiddleware = require('../middleware/auth');
-const { register, login, me, updateMe } = require('../controllers/authController');
+const { register, login, me, updateMe, changePassword } = require('../controllers/authController');
 
 const router = Router();
 
@@ -18,9 +18,10 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-router.post('/register', validate(registerSchema), register);
-router.post('/login',    validate(loginSchema),    login);
-router.get('/me',        authMiddleware,           me);
-router.put('/me',        authMiddleware,           updateMe);
+router.post('/register',      validate(registerSchema), register);
+router.post('/login',         validate(loginSchema),    login);
+router.get('/me',             authMiddleware,           me);
+router.put('/me',             authMiddleware,           updateMe);
+router.put('/me/password',    authMiddleware,           changePassword);
 
 module.exports = router;

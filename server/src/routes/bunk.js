@@ -55,6 +55,72 @@ router.get('/safe', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /api/bunk/forecast — predict end-of-semester attendance per subject
+router.get('/forecast', async (req, res, next) => {
+  try {
+    const stats = await getFullStats(req.user.id, req.user.minThreshold);
+
+    // Fetch timetable slots and academic calendar
+    const [slots, calendarEntries] = await Promise.all([
+      prisma.timetableSlot.findMany({ where: { userId: req.user.id } }),
+      prisma.academicCalendar.findMany({ where: { userId: req.user.id }, orderBy: { date: 'asc' } }),
+    ]);
+
+    const semesterEnd = calendarEntries.find((e) => e.type === 'SEMESTER_END');
+
+    const forecast = stats.map((s) => {
+      // Get slots for this subject's days
+      const subjectSlots = slots.filter((sl) => sl.subjectId === s.subject.id);
+      // Count remaining class days for this subject
+      const remaining = getRemainingDays(subjectSlots, calendarEntries, semesterEnd?.date);
+
+      // ── Best case: attend every remaining class ──────────────────────────
+      const bestAttended = s.attended + remaining;
+      const bestTotal    = s.total + remaining;
+      const bestPct      = bestTotal > 0
+        ? parseFloat(((bestAttended / bestTotal) * 100).toFixed(1))
+        : 0;
+
+      // ── Worst case: continue at current rate (skip as many as safe allows) ─
+      // Current attendance rate
+      const currentRate = s.total > 0 ? s.attended / s.total : 1;
+      const worstAttended = s.attended + Math.round(currentRate * remaining);
+      const worstTotal    = s.total + remaining;
+      const worstPct      = worstTotal > 0
+        ? parseFloat(((worstAttended / worstTotal) * 100).toFixed(1))
+        : 0;
+
+      // ── Minimum classes needed from remaining to hit threshold ────────────
+      // Need: (attended + x) / (total + remaining) >= threshold/100
+      // x >= threshold/100 * (total + remaining) - attended
+      const minNeeded = Math.max(
+        0,
+        Math.ceil((s.threshold / 100) * (s.total + remaining) - s.attended)
+      );
+      const mustAttendFromRemaining = Math.min(minNeeded, remaining);
+
+      const onTrack = worstPct >= s.threshold;
+
+      return {
+        subjectId:    s.subject.id,
+        subjectName:  s.subject.name,
+        subjectColor: s.subject.color,
+        currentPct:   s.percentage,
+        threshold:    s.threshold,
+        remaining,
+        bestPct,
+        worstPct,
+        onTrack,
+        mustAttendFromRemaining,
+        canBunkFromRemaining: remaining - mustAttendFromRemaining,
+        semesterEndDate: semesterEnd?.date || null,
+      };
+    });
+
+    res.json({ forecast, semesterEndDate: semesterEnd?.date || null });
+  } catch (err) { next(err); }
+});
+
 // GET /api/bunk/whatif?Physics=2&Math=1
 // Query params: subjectName=N (number of extra bunks to simulate)
 router.get('/whatif', async (req, res, next) => {
@@ -118,20 +184,47 @@ router.post('/mood', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /api/bunk/mood-history?days=30
+router.get('/mood-history', async (req, res, next) => {
+  try {
+    const days = Math.min(parseInt(req.query.days, 10) || 30, 90);
+    const since = new Date(Date.now() - days * 86400000);
+
+    const logs = await prisma.moodLog.findMany({
+      where: { userId: req.user.id, date: { gte: since } },
+      orderBy: { date: 'asc' },
+      select: { date: true, mood: true },
+    });
+
+    // Format dates as YYYY-MM-DD strings for the client
+    const formatted = logs.map((l) => ({
+      date: new Date(l.date).toISOString().split('T')[0],
+      mood: l.mood,
+    }));
+
+    res.json({ logs: formatted });
+  } catch (err) { next(err); }
+});
+
 // POST /api/bunk/ai-suggest — Gemini-powered suggestion
 router.post('/ai-suggest', async (req, res, next) => {
   try {
     const stats = await getFullStats(req.user.id, req.user.minThreshold);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Use local YYYY-MM-DD string — same approach as the mood POST route
+    // so the date keys always match regardless of server TZ offset.
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    const todayLocal = new Date(todayStr); // local midnight
+    const tomorrowLocal = new Date(todayLocal.getTime() + 86400000);
 
-    const todayMood = await prisma.moodLog.findUnique({
-      where: { userId_date: { userId: req.user.id, date: today } },
+    // Use findFirst with a range — resilient to any remaining TZ drift
+    const todayMood = await prisma.moodLog.findFirst({
+      where: { userId: req.user.id, date: { gte: todayLocal, lt: tomorrowLocal } },
+      orderBy: { date: 'desc' },
     });
 
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(today.getDate() - 7);
+    const sevenDaysAgo = new Date(todayLocal.getTime() - 7 * 86400000);
 
     const moodHistory = await prisma.moodLog.findMany({
       where: { userId: req.user.id, date: { gte: sevenDaysAgo } },

@@ -28,7 +28,7 @@ router.get('/csv', async (req, res, next) => {
     const csv = rows.map((r) => r.join(',')).join('\n');
 
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="bunksmart-attendance.csv"');
+    res.setHeader('Content-Disposition', 'attachment; filename="attendsmart-attendance.csv"');
     res.send(csv);
   } catch (err) { next(err); }
 });
